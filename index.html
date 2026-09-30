@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>다익스트라 vs 플로이드-워셜</title>
+<style>
+:root{--bg:#08111f;--panel:#101e32;--panel2:#142640;--line:#29415f;--text:#edf4ff;--muted:#a8bad2;--blue:#60a5fa;--cyan:#67e8f9;--purple:#a78bfa;--green:#86efac;--red:#fb7185;--gold:#fbbf24}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#142b49 0%,var(--bg) 65%);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+.deck{height:100vh;display:grid;place-items:center;padding:24px}.slide{display:none;width:min(1200px,96vw);height:min(760px,90vh);min-height:500px;background:linear-gradient(145deg,rgba(16,30,50,.98),rgba(8,17,31,.98));border:1px solid var(--line);border-radius:22px;padding:clamp(24px,4vw,54px);box-shadow:0 24px 80px #0008;overflow:auto;position:relative}.slide.active{display:flex;flex-direction:column;gap:22px;animation:fade .25s ease}@keyframes fade{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+h1{font-size:clamp(2.3rem,5vw,4.5rem);line-height:1.12;margin:0;letter-spacing:-.04em}h2{font-size:clamp(1.65rem,3vw,2.5rem);margin:0 0 6px;letter-spacing:-.03em}h3{margin:0 0 12px;color:var(--cyan);font-size:1.08rem}p,li{color:#d5e2f3;line-height:1.65}ul{padding-left:22px;margin:8px 0}li{margin:5px 0}.eyebrow{color:var(--cyan);font-size:.85rem;text-transform:uppercase;letter-spacing:.15em;font-weight:800}.subtitle{font-size:clamp(1rem,2vw,1.35rem);color:var(--muted);max-width:720px}.tag{display:inline-flex;padding:6px 12px;border:1px solid #38618e;border-radius:999px;color:#bfdbfe;background:#102a49;font-size:.85rem;font-weight:700}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.card{background:linear-gradient(145deg,#12243b,#0c192b);border:1px solid var(--line);border-radius:16px;padding:20px;min-width:0}.card p:last-child{margin-bottom:0}.callout{border-left:4px solid var(--blue);padding:12px 16px;background:#10233a;border-radius:0 12px 12px 0;color:#dbeafe}.accent{color:var(--blue)}.purple{color:var(--purple)}.green{color:var(--green)}.red{color:var(--red)}.muted{color:var(--muted)}table{width:100%;border-collapse:collapse;font-size:.92rem;overflow:hidden;border-radius:12px}th,td{padding:11px 12px;border:1px solid #29415f;text-align:left;vertical-align:top}th{background:#17375b;color:#dbeafe}td{background:#0d1b2d;color:#d7e5f7}code{font-family:Consolas,"Courier New",monospace;color:#c4b5fd}.code{background:#07101c;border:1px solid #263c56;border-radius:14px;padding:18px;overflow:auto;white-space:pre;font:clamp(.72rem,1.1vw,.9rem)/1.55 Consolas,monospace;color:#cbd5e1;max-height:490px}.kw{color:#c4b5fd}.type{color:#67e8f9}.str{color:#86efac}.comment{color:#7189a7}.num{color:#fbbf24}.pill{display:inline-block;border-radius:8px;padding:4px 8px;background:#1b3554;color:#bfdbfe;font-size:.8rem}.hero{justify-content:center;background:radial-gradient(circle at 85% 35%,#1e4d7d55,transparent 30%),linear-gradient(135deg,#0d1c31,#08111f)}.hero:after{content:"";position:absolute;width:300px;height:300px;border:1px solid #60a5fa33;border-radius:50%;right:-80px;top:20%;box-shadow:0 0 0 40px #60a5fa0a,0 0 0 80px #60a5fa08;pointer-events:none}.hero .presenter{margin-top:35px;color:#bfdbfe}.graph{width:100%;height:auto;max-height:250px;background:#091625;border-radius:12px;border:1px solid #203957}.graph text{font:14px system-ui;fill:#e5efff}.graph .edge{stroke:#6686ad;stroke-width:2}.graph .node{fill:#173c65;stroke:#60a5fa;stroke-width:2}.graph .hot{fill:#2563eb;stroke:#93c5fd;stroke-width:3}.graph .label{fill:#93c5fd;font-size:13px}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.step{padding:12px;border:1px solid var(--line);border-radius:12px;background:#0b192a}.step b{display:block;color:var(--cyan);margin-bottom:7px}.matrix-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.matrix{font-size:.82rem}.matrix h4{margin:0 0 7px;color:var(--cyan)}.matrix td,.matrix th{padding:7px;text-align:center}.matrix .changed{background:#164e63;color:#a5f3fc;font-weight:bold}.nav{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:14px;padding:10px 14px;background:#07101eeF;border:1px solid #29415f;border-radius:999px;box-shadow:0 10px 40px #0008;z-index:10}.nav button{border:0;border-radius:50%;width:38px;height:38px;background:#183657;color:white;font-size:1.2rem;cursor:pointer}.nav button:hover{background:#2563eb}.counter{font-size:.9rem;color:#bfdbfe;min-width:70px;text-align:center}.dots{display:flex;gap:5px}.dots button{width:7px;height:7px;padding:0;background:#3b506b}.dots button.on{background:var(--cyan);transform:scale(1.35)}.foot{margin-top:auto;display:flex;justify-content:space-between;color:#66809f;font-size:.8rem;padding-top:8px}.decision{display:grid;grid-template-columns:1fr 1fr;gap:12px}.branch{border:1px solid #355577;border-radius:12px;padding:14px;background:#0c1d30;text-align:center}.branch strong{color:var(--cyan)}.arrow{text-align:center;color:var(--blue);font-size:1.4rem;margin:4px}
+@media(max-width:760px){.deck{padding:8px}.slide{width:98vw;height:87vh;padding:20px;min-height:0}.grid2,.grid3,.steps,.matrix-wrap,.decision{grid-template-columns:1fr}.nav{bottom:8px;gap:8px;padding:7px}.dots{display:none}.code{max-height:340px}.hero:after{opacity:.3}.foot{padding-bottom:34px}table{font-size:.78rem}th,td{padding:7px}}
+@media print{body{background:white}.deck{display:block;height:auto;padding:0}.slide{display:flex!important;page-break-after:always;width:100%;height:100vh;box-shadow:none;border-radius:0;background:#08111f;print-color-adjust:exact}.nav{display:none}}
+</style>
+</head>
+<body>
+<div class="deck">
+<section class="slide hero active">
+<div class="eyebrow">Algorithm Study · Graph Theory</div><span class="tag">Shortest Path Algorithms</span>
+<h1><span class="accent">다익스트라</span> vs<br><span class="purple">플로이드-워셜</span></h1>
+<p class="subtitle">최단 경로 문제, 두 가지 접근법의 차이와 선택 기준</p>
+<div class="grid2" style="margin-top:25px;max-width:700px"><div><span class="muted">발표자</span><br><strong>양유진</strong></div><div><span class="muted">핵심 질문</span><br><strong>어떤 상황에서 어떤 알고리즘을 선택할까?</strong></div></div>
+<div class="foot"><span>DEVELOPER STUDY</span><span>01 / 12</span></div>
+</section>
+<section class="slide"><div class="eyebrow">01 · Overview</div><h2>알고리즘 개요 및 핵심 개념</h2>
+<div class="grid2">
+<div class="card"><h3>최단 경로 문제 (Shortest Path)</h3><p>가중치가 있는 그래프에서 출발 정점부터 목적 정점까지, 간선 가중치 합이 최소가 되는 경로를 찾는 문제입니다.</p><svg class="graph" viewBox="0 0 420 190"><g class="edge"><path d="M65 95L170 45L300 75L360 145L205 150L65 95M170 45L205 150M65 95L300 75"/></g><g class="label"><text x="111" y="57">2</text><text x="235" y="49">3</text><text x="326" y="112">4</text><text x="270" y="153">2</text><text x="119" y="132">5</text><text x="179" y="103">1</text></g><g><circle class="node hot" cx="65" cy="95" r="17"/><circle class="node" cx="170" cy="45" r="17"/><circle class="node" cx="300" cy="75" r="17"/><circle class="node" cx="360" cy="145" r="17"/><circle class="node" cx="205" cy="150" r="17"/></g><g><text x="60" y="100">A</text><text x="165" y="50">B</text><text x="295" y="80">C</text><text x="355" y="150">D</text><text x="200" y="155">E</text></g></svg><p class="muted">경로의 비용 = 경로를 구성하는 모든 간선 가중치의 합</p></div>
+<div class="card"><h3>핵심 차이 한눈에</h3><table><tr><th>구분</th><th>다익스트라</th><th>플로이드-워셜</th></tr><tr><td>목적</td><td>단일 출발점 → 모든 정점</td><td>모든 정점 쌍</td></tr><tr><td>접근</td><td>그리디 + 우선순위 큐</td><td>동적 계획법</td></tr><tr><td>음수 간선</td><td class="red">불가</td><td class="green">가능*</td></tr><tr><td>시간</td><td>O((V+E) log V)*</td><td>O(V³)</td></tr><tr><td>공간</td><td>O(V+E)</td><td>O(V²)</td></tr></table><p class="muted">* 다익스트라는 인접 리스트 + 이진 힙 기준. 플로이드-워셜은 음수 사이클이 없어야 최단 경로가 정의됩니다.</p></div></div><div class="foot"><span>OVERVIEW</span><span>02 / 12</span></div></section>
+<section class="slide"><div class="eyebrow">02 · Dijkstra</div><h2>다익스트라 알고리즘</h2><div class="grid2">
+<div class="card"><h3>핵심 개념과 원리</h3><ul><li>하나의 시작 정점에서 다른 모든 정점까지의 최단 거리를 계산합니다.</li><li>현재까지 알려진 거리 중 가장 작은 정점을 먼저 확정합니다.</li><li>확정한 정점을 거쳐 이웃 정점의 거리를 완화(relaxation)합니다.</li></ul><div class="callout">전제: 모든 간선 가중치가 <strong>0 이상</strong>이어야 합니다.</div></div>
+<div class="card"><h3>주요 자료구조</h3><ul><li><strong>인접 리스트</strong>: 각 정점의 이웃과 간선 가중치 저장</li><li><strong>PriorityQueue</strong>: 거리 기준 최소 힙</li><li><strong>dist 배열</strong>: 시작점부터 각 정점까지의 현재 최솟값</li></ul><svg class="graph" viewBox="0 0 400 210"><g class="edge"><path d="M200 40L115 105L285 105L200 40M115 105L160 175L285 105L320 175"/></g><g class="label"><text x="143" y="64">1</text><text x="240" y="64">1</text><text x="190" y="112">2</text><text x="125" y="151">3</text><text x="291" y="151">1</text></g><g><circle class="node hot" cx="200" cy="40" r="19"/><circle class="node" cx="115" cy="105" r="19"/><circle class="node" cx="285" cy="105" r="19"/><circle class="node" cx="160" cy="175" r="19"/><circle class="node" cx="320" cy="175" r="19"/></g><g><text x="195" y="45">A</text><text x="110" y="110">B</text><text x="280" y="110">C</text><text x="155" y="180">D</text><text x="315" y="180">E</text></g></svg></div></div>
+<div class="foot"><span>DIJKSTRA · GREEDY</span><span>03 / 12</span></div></section>
+<section class="slide"><div class="eyebrow">03 · Dijkstra Walkthrough</div><h2>다익스트라 동작 과정</h2><p class="muted">방향 그래프 · 시작점 A · 간선: A→B(2), A→C(5), B→C(1), B→D(4), C→D(1), D→E(3)</p>
+<div class="grid2"><div class="card"><h3>거리 배열 업데이트</h3><table><tr><th>단계</th><th>선택/처리</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr><tr><td>초기</td><td>시작 A</td><td>0</td><td>∞</td><td>∞</td><td>∞</td><td>∞</td></tr><tr><td>1</td><td>A 처리</td><td>0</td><td>2</td><td>5</td><td>∞</td><td>∞</td></tr><tr><td>2</td><td>B 처리</td><td>0</td><td>2</td><td class="changed">3</td><td>6</td><td>∞</td></tr><tr><td>3</td><td>C 처리</td><td>0</td><td>2</td><td>3</td><td class="changed">4</td><td>∞</td></tr><tr><td>4</td><td>D 처리</td><td>0</td><td>2</td><td>3</td><td>4</td><td class="changed">7</td></tr><tr><td>5</td><td>E 처리</td><td>0</td><td>2</td><td>3</td><td>4</td><td>7</td></tr></table></div>
+<div class="card"><h3>우선순위 큐 변화 (거리, 정점)</h3><div class="steps" style="grid-template-columns:1fr 1fr"><div class="step"><b>초기</b><code>(0,A)</code></div><div class="step"><b>A 처리</b><code>(2,B), (5,C)</code></div><div class="step"><b>B 처리</b><code>(3,C), (5,C), (6,D)</code></div><div class="step"><b>C 처리</b><code>(4,D), (6,D)</code></div><div class="step"><b>D 처리</b><code>(6,D), (7,E)</code></div><div class="step"><b>완료</b><code>dist=[0,2,3,4,7]</code></div></div><p class="muted">큐에 남은 항목의 거리가 dist보다 크면 오래된 정보이므로 건너뜁니다.</p></div></div><div class="foot"><span>RELAXATION & MIN-HEAP</span><span>04 / 12</span></div></section>
+
+<section class="slide"><div class="eyebrow">04 · Interactive Graph Walkthrough</div><h2>다익스트라: 그래프를 한 단계씩 따라가기</h2>
+<p class="muted">시작 정점 A에서 가장 가까운 정점을 확정하고, 연결된 간선을 따라 거리를 갱신합니다. 아래 단계 버튼 또는 이전/다음으로 진행해 보세요.</p>
+<div class="grid2">
+<div class="card"><h3>그래프 상태 <span class="pill" id="dj-stage-label">시작 전</span></h3>
+<svg id="dj-graph" class="graph" viewBox="0 0 520 300" role="img" aria-label="다익스트라 단계별 그래프">
+<defs><marker id="dj-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6686ad"/></marker></defs>
+<g id="dj-edges"></g><g id="dj-nodes"></g>
+</svg>
+<div class="steps" style="grid-template-columns:repeat(5,1fr);margin-top:12px">
+<button class="step dj-step" data-step="0"><b>0</b>초기</button><button class="step dj-step" data-step="1"><b>1</b>A 확정</button><button class="step dj-step" data-step="2"><b>2</b>B 확정</button><button class="step dj-step" data-step="3"><b>3</b>C 확정</button><button class="step dj-step" data-step="4"><b>4</b>D 확정</button>
+</div></div>
+<div class="card"><h3>거리 배열과 큐</h3><div id="dj-explain" class="callout">시작 정점 A의 거리를 0으로 두고 나머지는 무한대로 초기화합니다.</div>
+<table style="margin-top:14px"><tr><th>정점</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th></tr><tr><th>현재 최단 거리</th><td id="dj-a">0</td><td id="dj-b">∞</td><td id="dj-c">∞</td><td id="dj-d">∞</td><td id="dj-e">∞</td></tr></table>
+<p><strong>우선순위 큐</strong></p><div id="dj-queue" class="code" style="white-space:normal;min-height:55px">[(0, A)]</div>
+<div class="row" style="justify-content:space-between;align-items:center;margin-top:12px"><button class="button" id="dj-prev" style="background:#183657;color:white;border:0;border-radius:9px;padding:10px 16px;cursor:pointer">← 이전 단계</button><span id="dj-step-count" class="pill">1 / 5</span><button id="dj-next" style="background:#2563eb;color:white;border:0;border-radius:9px;padding:10px 16px;cursor:pointer">다음 단계 →</button></div>
+</div></div><div class="foot"><span>INTERACTIVE · DIJKSTRA</span><span>STEP BY STEP</span></div></section>
+
+<section class="slide"><div class="eyebrow">04 · Dijkstra Code</div><h2>다익스트라 핵심 구현 (Java)</h2><div class="grid2" style="grid-template-columns:1.7fr 1fr">
+<div class="code"><span class="kw">import</span> java.util.*;
+
+<span class="kw">class</span> <span class="type">Edge</span> {
+    <span class="kw">int</span> to, weight;
+    Edge(<span class="kw">int</span> to, <span class="kw">int</span> weight) {
+        <span class="kw">this</span>.to = to;
+        <span class="kw">this</span>.weight = weight;
+    }
+}
+
+<span class="kw">static int</span>[] dijkstra(
+        List&lt;Edge&gt;[] graph, <span class="kw">int</span> start) {
+    <span class="kw">int</span> n = graph.length;
+    <span class="kw">int</span>[] dist = <span class="kw">new int</span>[n];
+    Arrays.fill(dist, Integer.MAX_VALUE);
+    dist[start] = 0;
+
+    PriorityQueue&lt;<span class="type">int</span>[]&gt; pq =
+        <span class="kw">new</span> PriorityQueue&lt;&gt;(
+            (a, b) -&gt; Integer.compare(a[1], b[1]));
+    pq.offer(<span class="kw">new int</span>[]{start, 0});
+
+    <span class="kw">while</span> (!pq.isEmpty()) {
+        <span class="kw">int</span>[] cur = pq.poll();
+        <span class="kw">int</span> u = cur[0], d = cur[1];
+
+        <span class="comment">// 오래된 큐 항목은 무시</span>
+        <span class="kw">if</span> (d != dist[u]) <span class="kw">continue</span>;
+
+        <span class="kw">for</span> (Edge e : graph[u]) {
+            <span class="kw">if</span> (dist[u] + e.weight &lt; dist[e.to]) {
+                dist[e.to] = dist[u] + e.weight;
+                pq.offer(<span class="kw">new int</span>[]{e.to, dist[e.to]});
+            }
+        }
+    }
+    <span class="kw">return</span> dist;
+}</div>
+<div><div class="card"><h3>구현 체크포인트</h3><ul><li>우선순위 큐는 거리 오름차순으로 정렬</li><li>거리 갱신 시 새 항목을 큐에 삽입</li><li><code>d != dist[u]</code>로 오래된 항목 제거</li><li>실제 서비스에서는 큰 가중치 합을 고려해 <code>long</code> 사용 권장</li></ul></div><div class="card" style="margin-top:14px"><h3>시간 복잡도</h3><div style="font-size:1.8rem;color:var(--cyan);font-weight:800">O((V+E) log V)</div><p class="muted">이진 힙 + 인접 리스트 기준. 단순 배열 구현은 O(V²).</p></div></div></div><div class="foot"><span>JAVA · PRIORITYQUEUE</span><span>05 / 12</span></div></section>
+<section class="slide"><div class="eyebrow">05 · Dijkstra Caveats</div><h2>다익스트라 주의점 및 특징</h2><div class="grid2">
+<div class="card"><h3 class="red">음수 간선이 불가능한 이유</h3><p>다익스트라는 가장 가까운 정점을 꺼내면 그 거리가 최종 최단 거리라고 확정합니다.</p><p>하지만 음수 간선이 있으면 나중에 방문한 경로가 이미 확정된 정점의 거리를 더 작게 만들 수 있습니다.</p><div class="callout"><strong>예시</strong>: A→B(2), A→C(5), C→B(-10)<br>먼저 B를 2로 확정해도, C를 거쳐 B로 가면 -5가 됩니다.</div></div>
+<div class="card"><h3>특징 정리</h3><ul><li>단일 시작점에서 모든 정점까지의 거리 계산</li><li>음수 가중치가 없다면 효율적</li><li>도달할 수 없는 정점의 거리는 ∞로 유지</li><li>경로 자체가 필요하면 이전 정점을 저장하는 <code>prev[]</code> 배열 추가</li></ul><svg class="graph" viewBox="0 0 400 180"><g class="edge"><path d="M65 90L190 45L320 130M65 90L320 130"/></g><path d="M320 130L190 45" stroke="#fb7185" stroke-width="3" stroke-dasharray="6 5"/><g class="label"><text x="119" y="55">2</text><text x="255" y="75">-10</text><text x="185" y="130">5</text></g><g><circle class="node" cx="65" cy="90" r="20"/><circle class="node" cx="190" cy="45" r="20"/><circle class="node" cx="320" cy="130" r="20"/></g><g><text x="60" y="95">A</text><text x="185" y="50">B</text><text x="315" y="135">C</text></g></svg></div></div><div class="foot"><span>NON-NEGATIVE EDGE WEIGHTS</span><span>06 / 12</span></div></section>
+<section class="slide"><div class="eyebrow">06 · Floyd-Warshall</div><h2>플로이드-워셜 알고리즘</h2><div class="grid2">
+<div class="card"><h3>핵심 개념과 원리</h3><ul><li>모든 정점 쌍 (i, j)의 최단 거리를 한 번에 구합니다.</li><li>동적 계획법(DP)을 이용해 경유 가능한 정점 집합을 점차 확장합니다.</li><li>k를 경유지로 허용했을 때 더 짧아지는지 모든 i, j 쌍을 확인합니다.</li></ul><div class="callout">핵심 질문: i → j 직접 가는 것보다 i → k → j가 더 짧은가?</div></div>
+<div class="card"><h3>자료구조와 점화식</h3><p>2차원 인접 행렬이자 DP 테이블 <code>dist[V][V]</code>를 사용합니다.</p><div style="font-size:1.2rem;background:#07101c;padding:20px;border-radius:12px;text-align:center;color:var(--cyan)">D[i][j] = min(D[i][j],<br>D[i][k] + D[k][j])</div><p class="muted">초기화: 대각선은 0, 간선은 가중치, 나머지는 INF.</p><p class="muted">k가 가장 바깥 반복문이어야 DP의 의미가 유지됩니다.</p></div></div><div class="grid3"><div class="card"><h3>음수 간선</h3><p>허용 가능. 단, 음수 사이클이 없어야 최단 거리가 유한하게 정의됩니다.</p></div><div class="card"><h3>시간 복잡도</h3><p style="font-size:1.6rem;color:var(--cyan);font-weight:800">O(V³)</p><p class="muted">정점 수가 작거나 모든 쌍 질의에 적합</p></div><div class="card"><h3>공간 복잡도</h3><p style="font-size:1.6rem;color:var(--cyan);font-weight:800">O(V²)</p><p class="muted">거리 행렬을 저장</p></div></div><div class="foot"><span>DYNAMIC PROGRAMMING</span><span>07 / 12</span></div></section>
+<section class="slide"><div class="eyebrow">07 · Floyd-Warshall Walkthrough</div><h2>플로이드-워셜 동작 과정</h2><p class="muted">4개 정점 A, B, C, D · 방향 간선 A→B(3), A→D(10), B→C(2), C→D(1), D→B(4)</p>
+<div class="matrix-wrap">
+<div class="card matrix"><h4>초기 (k 없음)</h4><table><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr><tr><th>A</th><td>0</td><td>3</td><td>∞</td><td>10</td></tr><tr><th>B</th><td>∞</td><td>0</td><td>2</td><td>∞</td></tr><tr><th>C</th><td>∞</td><td>∞</td><td>0</td><td>1</td></tr><tr><th>D</th><td>∞</td><td>4</td><td>∞</td><td>0</td></tr></table><p class="muted">직접 연결만 반영</p></div>
+<div class="card matrix"><h4>k = A</h4><table><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr><tr><th>A</th><td>0</td><td>3</td><td>∞</td><td>10</td></tr><tr><th>B</th><td>∞</td><td>0</td><td>2</td><td>∞</td></tr><tr><th>C</th><td>∞</td><td>∞</td><td>0</td><td>1</td></tr><tr><th>D</th><td>∞</td><td>4</td><td>∞</td><td>0</td></tr></table><p class="muted">A를 경유해 개선되는 쌍 없음</p></div>
+<div class="card matrix"><h4>k = B</h4><table><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr><tr><th>A</th><th>0</th><td>3</td><td class="changed">5</td><td>10</td></tr><tr><th>B</th><td>∞</td><td>0</td><td>2</td><td>∞</td></tr><tr><th>C</th><td>∞</td><td>∞</td><td>0</td><td>1</td></tr><tr><th>D</th><td>∞</td><td>4</td><td class="changed">6</td><td>0</td></tr></table><p class="muted">A→C: A→B→C = 5, D→C = 6</p></div>
+<div class="card matrix"><h4>k = C, D 완료</h4><table><tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th></tr><tr><th>A</th><td>0</td><td class="changed">9</td><td>5</td><td class="changed">6</td></tr><tr><th>B</th><td>∞</td><td>0</td><td>2</td><td class="changed">3</td></tr><tr><th>C</th><td>∞</td><td class="changed">5</td><td>0</td><td>1</td></tr><tr><th>D</th><td>∞</td><td>4</td><td>6</td><td>0</td></tr></table><p class="muted">모든 경유지를 고려한 최종 거리</p></div></div>
+<div class="callout">변화 예시: A→D가 A→B→C→D 경로로 3 + 2 + 1 = 6으로 개선됩니다. 행렬의 INF는 도달 불가를 뜻합니다.</div><div class="foot"><span>INTERMEDIATE VERTEX K</span><span>08 / 12</span></div></section>
+
+<section class="slide"><div class="eyebrow">08 · Interactive DP Walkthrough</div><h2>플로이드-워셜: 경유지 K를 바꿔 보기</h2>
+<p class="muted">k가 바뀔 때마다 모든 출발점 i와 도착점 j를 검사합니다. 단계 버튼으로 경유지별 거리 행렬의 변화를 확인하세요.</p>
+<div class="grid2">
+<div class="card"><h3>그래프와 현재 경유지</h3><span id="fw-stage-label" class="pill">초기 행렬 · 경유지 없음</span>
+<svg id="fw-graph" class="graph" viewBox="0 0 480 280" role="img" aria-label="플로이드 워셜 네 정점 그래프">
+<defs><marker id="fw-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6686ad"/></marker></defs><g id="fw-edges"></g><g id="fw-nodes"></g></svg>
+<div class="steps" style="grid-template-columns:repeat(5,1fr);margin-top:12px"><button class="step fw-step" data-step="0"><b>0</b>초기</button><button class="step fw-step" data-step="1"><b>1</b>k=A</button><button class="step fw-step" data-step="2"><b>2</b>k=B</button><button class="step fw-step" data-step="3"><b>3</b>k=C</button><button class="step fw-step" data-step="4"><b>4</b>k=D</button></div></div>
+<div class="card"><h3>DP 거리 행렬 D[i][j]</h3><div id="fw-explain" class="callout">초기에는 직접 연결된 간선만 기록합니다. 대각선은 0, 연결이 없으면 ∞입니다.</div>
+<div id="fw-matrix" style="margin-top:14px"></div>
+<div class="row" style="justify-content:space-between;align-items:center;margin-top:12px"><button id="fw-prev" style="background:#183657;color:white;border:0;border-radius:9px;padding:10px 16px;cursor:pointer">← 이전 단계</button><span id="fw-step-count" class="pill">1 / 5</span><button id="fw-next" style="background:#2563eb;color:white;border:0;border-radius:9px;padding:10px 16px;cursor:pointer">다음 단계 →</button></div></div></div>
+<div class="foot"><span>INTERACTIVE · FLOYD-WARSHALL</span><span>STEP BY STEP</span></div></section>
+
+<section class="slide"><div class="eyebrow">08 · Floyd-Warshall Code</div><h2>플로이드-워셜 핵심 구현 (Java)</h2><div class="grid2" style="grid-template-columns:1.7fr 1fr">
+<div class="code"><span class="kw">static final int</span> INF = 1_000_000_000;
+
+<span class="kw">static void</span> floydWarshall(<span class="kw">int</span>[][] dist, <span class="kw">int</span> n) {
+    <span class="kw">for</span> (<span class="kw">int</span> k = 0; k &lt; n; k++) {
+        <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; n; i++) {
+            <span class="kw">for</span> (<span class="kw">int</span> j = 0; j &lt; n; j++) {
+                <span class="comment">// INF끼리 더하지 않도록 확인</span>
+                <span class="kw">if</span> (dist[i][k] == INF ||
+                    dist[k][j] == INF) {
+                    <span class="kw">continue</span>;
+                }
+
+                dist[i][j] = Math.min(
+                    dist[i][j],
+                    dist[i][k] + dist[k][j]
+                );
+            }
+        }
+    }
+
+    <span class="comment">// 음수 사이클 확인</span>
+    <span class="kw">for</span> (<span class="kw">int</span> i = 0; i &lt; n; i++) {
+        <span class="kw">if</span> (dist[i][i] &lt; 0) {
+            System.out.println(<span class="str">"음수 사이클 존재"</span>);
+        }
+    }
+}</div>
+<div><div class="card"><h3>초기화 예시</h3><ul><li><code>dist[i][i] = 0</code></li><li>간선 (u, v, w): <code>dist[u][v] = min(기존, w)</code></li><li>그 외는 INF</li></ul></div><div class="card" style="margin-top:14px"><h3>주의</h3><p>INF를 더하면 정수 오버플로가 발생할 수 있으므로 도달 가능 여부를 먼저 확인합니다.</p><p>큰 가중치 범위에서는 <code>long</code> 타입을 고려하세요.</p></div></div></div><div class="foot"><span>TRIPLE LOOP · DP TABLE</span><span>09 / 12</span></div></section>
+<section class="slide"><div class="eyebrow">09 · Floyd-Warshall Caveats</div><h2>플로이드-워셜 주의점 및 특징</h2><div class="grid2">
+<div class="card"><h3 class="red">음수 사이클 감지</h3><p>알고리즘 종료 후 어떤 정점 i에 대해 <code>dist[i][i] &lt; 0</code>이면 음수 사이클이 존재합니다.</p><p>음수 사이클을 반복해서 돌면 경로 비용을 무한히 낮출 수 있어 해당 쌍의 최단 거리가 정의되지 않습니다.</p><div class="callout">음수 간선은 허용하지만, 음수 사이클은 별도로 감지해야 합니다.</div></div>
+<div class="card"><h3>특징과 사용 시 유의사항</h3><ul><li>모든 출발점-도착점 쌍의 최단 거리 계산</li><li>그래프가 조밀하거나 정점 수가 작을 때 구현이 간단</li><li>정점 수가 커지면 O(V³) 연산량과 O(V²) 메모리가 부담</li><li>경로 복원이 필요하면 next/parent 행렬을 추가로 갱신</li></ul><div class="pill">정점 수 제한을 먼저 확인!</div></div></div><div class="foot"><span>NEGATIVE CYCLE · O(V³)</span><span>10 / 12</span></div></section>
+<section class="slide"><div class="eyebrow">10 · Summary</div><h2>최종 요약 및 선택 기준</h2><table><tr><th>기준</th><th>다익스트라</th><th>플로이드-워셜</th></tr><tr><td>질의 범위</td><td>한 출발점에서 여러 목적지</td><td>모든 정점 쌍</td></tr><tr><td>음수 간선</td><td>불가</td><td>가능 (음수 사이클 불가)</td></tr><tr><td>희소 그래프</td><td>인접 리스트 + 힙에 적합</td><td>대체로 비효율적일 수 있음</td></tr><tr><td>조밀/작은 그래프</td><td>상황에 따라 O(V²) 구현</td><td>단순한 O(V³) 전처리</td></tr><tr><td>공간</td><td>O(V+E)</td><td>O(V²)</td></tr></table>
+<div class="callout"><strong>선택의 핵심:</strong> 필요한 경로 범위, 음수 가중치 여부, 정점 수와 그래프 밀도를 먼저 확인합니다.</div>
+<div class="foot"><span>COMPARE BEFORE YOU CODE</span><span>11 / 12</span></div></section>
+<section class="slide"><div class="eyebrow">11 · Decision Tree</div><h2>언제 어떤 알고리즘을 선택할까?</h2><div class="card" style="text-align:center"><span class="tag">문제 조건 확인</span><div class="arrow">↓</div><div class="decision"><div class="branch"><strong>단일 출발점 최단 경로</strong><p class="muted">Single-Source</p><div class="arrow">↓</div><div class="branch"><strong>음수 간선이 있는가?</strong><div class="arrow">↙　　↘</div><div class="grid2"><div class="step"><b class="green">아니오</b>다익스트라<br><small>힙 + 인접 리스트</small></div><div class="step"><b class="gold">예</b>벨만-포드 등<br><small>음수 사이클 확인</small></div></div></div></div><div class="branch"><strong>모든 정점 쌍 최단 경로</strong><p class="muted">All-Pairs</p><div class="arrow">↓</div><div class="branch"><strong>정점 수가 작거나 중간 규모인가?</strong><div class="arrow">↓</div><div class="step"><b class="green">예</b>플로이드-워셜<br><small>O(V³), 음수 간선 가능</small></div><div class="step" style="margin-top:8px"><b class="gold">아니오</b>반복 다익스트라 등 고려<br><small>희소 그래프·가중치 조건 확인</small></div></div></div></div></div><p class="muted">실전에서는 입력 제한(V, E), 메모리 제한, 질의 횟수까지 함께 확인하세요.</p><div class="foot"><span>DECISION TREE</span><span>12 / 12</span></div></section>
+</div>
+<nav class="nav" aria-label="슬라이드 탐색"><button id="prev" aria-label="이전 슬라이드">‹</button><span class="counter" id="counter">1 / 12</span><div class="dots" id="dots"></div><button id="next" aria-label="다음 슬라이드">›</button></nav>
+<script>
+const slides=[...document.querySelectorAll('.slide')], counter=document.getElementById('counter'), dots=document.getElementById('dots');let current=0;
+slides.forEach((_,i)=>{const b=document.createElement('button');b.setAttribute('aria-label',`${i+1}번 슬라이드`);b.onclick=()=>show(i);dots.appendChild(b)});
+function show(i){current=Math.max(0,Math.min(slides.length-1,i));slides.forEach((s,j)=>s.classList.toggle('active',j===current));[...dots.children].forEach((d,j)=>d.classList.toggle('on',j===current));counter.textContent=`${current+1} / ${slides.length}`;document.title=`${current+1}/${slides.length} · 다익스트라 vs 플로이드-워셜`}
+document.getElementById('prev').onclick=()=>show(current-1);document.getElementById('next').onclick=()=>show(current+1);
+document.addEventListener('keydown',e=>{if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();show(current+1)}else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();show(current-1)}else if(e.key==='Home')show(0);else if(e.key==='End')show(slides.length-1)});
+let touchX=0;document.addEventListener('touchstart',e=>touchX=e.changedTouches[0].screenX,{passive:true});document.addEventListener('touchend',e=>{let dx=e.changedTouches[0].screenX-touchX;if(Math.abs(dx)>70)show(current+(dx<0?1:-1))},{passive:true});show(0);
+
+// Interactive Dijkstra walkthrough
+(()=>{
+ const ns="http://www.w3.org/2000/svg";
+ const nodes={A:[65,150],B:[175,65],C:[290,150],D:[385,65],E:[440,235]};
+ const edges=[["A","B",2],["A","C",5],["B","C",1],["B","D",4],["C","D",1],["D","E",3]];
+ const states=[
+  {label:"초기화",dist:[0,"∞","∞","∞","∞"],done:[],queue:"[(0, A)]",msg:"A의 거리는 0, 나머지는 ∞입니다. 큐에서 (0, A)를 꺼낼 준비를 합니다.",active:[]},
+  {label:"A 확정",dist:[0,2,5,"∞","∞"],done:["A"],queue:"[(2, B), (5, C)]",msg:"A를 확정합니다. A→B(2), A→C(5)를 반영해 B와 C의 거리를 갱신합니다.",active:["A-B","A-C"]},
+  {label:"B 확정",dist:[0,2,3,6,"∞"],done:["A","B"],queue:"[(3, C), (5, C), (6, D)]",msg:"가장 작은 (2, B)를 꺼냅니다. B를 거치면 C는 2+1=3, D는 2+4=6으로 갱신됩니다.",active:["B-C","B-D"]},
+  {label:"C 확정",dist:[0,2,3,4,"∞"],done:["A","B","C"],queue:"[(4, D), (6, D)]",msg:"(3, C)를 꺼냅니다. C→D를 이용하면 3+1=4로, 기존 6보다 짧아 D를 갱신합니다.",active:["C-D"]},
+  {label:"D 확정 · 완료",dist:[0,2,3,4,7],done:["A","B","C","D","E"],queue:"[(7, E)] → 완료",msg:"D를 거쳐 E까지 4+3=7입니다. 최종 거리 배열은 [0, 2, 3, 4, 7]입니다.",active:["D-E"]}
+ ];
+ let step=0;
+ const eg=document.getElementById("dj-edges"), ng=document.getElementById("dj-nodes");
+ edges.forEach(([u,v,w])=>{const [x1,y1]=nodes[u],[x2,y2]=nodes[v];const line=document.createElementNS(ns,"line");line.setAttribute("x1",x1);line.setAttribute("y1",y1);line.setAttribute("x2",x2);line.setAttribute("y2",y2);line.setAttribute("class","edge");line.setAttribute("data-edge",u+"-"+v);line.setAttribute("marker-end","url(#dj-arrow)");eg.appendChild(line);const t=document.createElementNS(ns,"text");t.setAttribute("x",(x1+x2)/2+5);t.setAttribute("y",(y1+y2)/2-7);t.setAttribute("class","label");t.textContent=w;eg.appendChild(t)});
+ Object.entries(nodes).forEach(([name,[x,y]])=>{const c=document.createElementNS(ns,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",22);c.setAttribute("class","node");c.setAttribute("data-node",name);ng.appendChild(c);const t=document.createElementNS(ns,"text");t.setAttribute("x",x-5);t.setAttribute("y",y+5);t.textContent=name;ng.appendChild(t)});
+ function render(s){step=s;const d=states[s];document.getElementById("dj-stage-label").textContent=d.label;document.getElementById("dj-explain").textContent=d.msg;["a","b","c","d","e"].forEach((x,i)=>document.getElementById("dj-"+x).textContent=d.dist[i]);document.getElementById("dj-queue").textContent=d.queue;document.getElementById("dj-step-count").textContent=(s+1)+" / "+states.length;
+ ng.querySelectorAll("circle").forEach(c=>c.setAttribute("class",d.done.includes(c.dataset.node)?"node hot":"node"));
+ eg.querySelectorAll("line").forEach(l=>{const active=d.active.includes(l.dataset.edge);l.setAttribute("stroke",active?"#67e8f9":"#6686ad");l.setAttribute("stroke-width",active?"4":"2")});
+ document.querySelectorAll(".dj-step").forEach((b,i)=>{b.style.borderColor=i===s?"#67e8f9":"#29415f";b.style.background=i===s?"#164e63":"#0b192a"});
+ document.getElementById("dj-prev").disabled=s===0;document.getElementById("dj-next").disabled=s===states.length-1;
+ }
+ document.querySelectorAll(".dj-step").forEach(b=>b.onclick=()=>render(+b.dataset.step));document.getElementById("dj-prev").onclick=()=>render(Math.max(0,step-1));document.getElementById("dj-next").onclick=()=>render(Math.min(states.length-1,step+1));render(0);
+})();
+// Interactive Floyd-Warshall walkthrough. Stages are actual k-loop snapshots.
+(()=>{
+ const ns="http://www.w3.org/2000/svg", nodes={A:[70,130],B:[190,45],C:[330,130],D:[235,235]};
+ const edges=[["A","B",3],["A","D",10],["B","C",2],["C","D",1],["D","B",4]];
+ const INF=Infinity, initial=[[0,3,INF,10],[INF,0,2,INF],[INF,INF,0,1],[INF,4,INF,0]];
+ const mats=[initial.map(r=>r.slice())];let cur=initial.map(r=>r.slice());const changed=[];
+ for(let k=0;k<4;k++){const ch=[];for(let i=0;i<4;i++)for(let j=0;j<4;j++){if(cur[i][k]!==INF&&cur[k][j]!==INF&&cur[i][k]+cur[k][j]<cur[i][j]){cur[i][j]=cur[i][k]+cur[k][j];ch.push([i,j])}}mats.push(cur.map(r=>r.slice()));changed.push(ch)}
+ const labels=["초기 행렬 · 경유지 없음","k = A · A를 경유지로 허용","k = B · B를 경유지로 허용","k = C · C를 경유지로 허용","k = D · 최종 최단 거리"];
+ const messages=["직접 연결된 간선만 기록합니다. 대각선은 0, 연결이 없으면 ∞입니다.","A를 경유하는 경로를 검사합니다. 이 단계에서는 더 짧아지는 쌍이 없습니다.","B를 경유지로 허용합니다. A→C는 A→B→C로 5, D→C는 D→B→C로 6이 됩니다.","C를 경유지로 허용합니다. A→D는 5+1=6, B→D는 2+1=3으로 개선됩니다.","D를 경유지로 허용합니다. A→B는 A→D→B로 10, C→B는 C→D→B로 5가 됩니다. 행렬이 완성됩니다."];
+ let step=0;const eg=document.getElementById("fw-edges"),ng=document.getElementById("fw-nodes");
+ edges.forEach(([u,v,w])=>{const [x1,y1]=nodes[u],[x2,y2]=nodes[v];const line=document.createElementNS(ns,"line");line.setAttribute("x1",x1);line.setAttribute("y1",y1);line.setAttribute("x2",x2);line.setAttribute("y2",y2);line.setAttribute("class","edge");line.setAttribute("data-edge",u+"-"+v);line.setAttribute("marker-end","url(#fw-arrow)");eg.appendChild(line);const t=document.createElementNS(ns,"text");t.setAttribute("x",(x1+x2)/2+5);t.setAttribute("y",(y1+y2)/2-8);t.setAttribute("class","label");t.textContent=w;eg.appendChild(t)});
+ Object.entries(nodes).forEach(([name,[x,y]])=>{const c=document.createElementNS(ns,"circle");c.setAttribute("cx",x);c.setAttribute("cy",y);c.setAttribute("r",22);c.setAttribute("class","node");c.setAttribute("data-node",name);ng.appendChild(c);const t=document.createElementNS(ns,"text");t.setAttribute("x",x-5);t.setAttribute("y",y+5);t.textContent=name;ng.appendChild(t)});
+ function render(s){step=s;document.getElementById("fw-stage-label").textContent=labels[s];document.getElementById("fw-explain").textContent=messages[s];document.getElementById("fw-step-count").textContent=(s+1)+" / 5";
+ const names=["A","B","C","D"],m=mats[s],ch=changed[s-1]||[];let out='<table><tr><th></th>'+names.map(n=>`<th>${n}</th>`).join("")+'</tr>';m.forEach((row,i)=>{out+=`<tr><th>${names[i]}</th>`+row.map((v,j)=>`<td class="${ch.some(p=>p[0]===i&&p[1]===j)?"changed":""}">${v===INF?"∞":v}</td>`).join("")+"</tr>"});out+="</table>";document.getElementById("fw-matrix").innerHTML=out;
+ ng.querySelectorAll("circle").forEach(c=>c.setAttribute("class",s>0&&c.dataset.node===names[s-1]?"node hot":"node"));
+ eg.querySelectorAll("line").forEach(l=>{const active=s>0&&l.dataset.edge.includes(names[s-1]);l.setAttribute("stroke",active?"#a78bfa":"#6686ad");l.setAttribute("stroke-width",active?"4":"2")});
+ document.querySelectorAll(".fw-step").forEach((b,i)=>{b.style.borderColor=i===s?"#67e8f9":"#29415f";b.style.background=i===s?"#164e63":"#0b192a"});
+ document.getElementById("fw-prev").disabled=s===0;document.getElementById("fw-next").disabled=s===4;
+ }
+ document.querySelectorAll(".fw-step").forEach(b=>b.onclick=()=>render(+b.dataset.step));document.getElementById("fw-prev").onclick=()=>render(Math.max(0,step-1));document.getElementById("fw-next").onclick=()=>render(Math.min(4,step+1));render(0);
+})();
+
+</script>
+</body></html>
